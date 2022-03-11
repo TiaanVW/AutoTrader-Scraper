@@ -1,39 +1,31 @@
 import requests
 import pandas
-from functionality import car_brand
+from functionality import build_soup, user_input, page_nr
 import numpy as np
 import pydash as p
 from bs4 import BeautifulSoup
 
-url = f"https://www.autotrader.co.za/cars-for-sale/{car_brand('BMW')}"
-r = requests.get(url)
-c = r.content
-soup = BeautifulSoup(c, "html.parser")
+make = user_input()
+soup, url = build_soup(make)
 brand_param = p.strings.substr_right(url, "cars-for-sale/")
 brand_param = p.strings.to_upper(brand_param).replace("-"," ")
 
-for pgroup in soup.find_all("li", class_="e-page-number"):
-    if pgroup.find("a"):
-        page_nr = pgroup.find("a").text
-    else:
-        pass
-
 l = []
 
-for page in range(1, int(page_nr)+1):
+
+for page in range(1, int(page_nr(soup)) + 1):
     new_url = url + f"?pagenumber={page}"
     r = requests.get(new_url)
     c = r.content
-    soup = BeautifulSoup(c, "html.parser")
+    new_soup = BeautifulSoup(c, "html.parser")
 
-    all = soup.find_all("div", {"class": "b-result-tile"})
+    all = new_soup.find_all("div", {"class": "b-result-tile"})
 
     print(page)
 
     for item in all:
         d = {}
         text = p.strings.to_upper(item.find("span", {"class": "e-title"}).text)
-        d["title"] = text
         d["Brand"] = brand_param
         d["Model"] = p.strings.substr_right((text), d["Brand"])
         d["New/Used"] = item.find("span", {"class": "e-type"}).text
@@ -72,3 +64,31 @@ df.dropna(subset=["Model"], inplace=True)
 df.to_excel("Cars.xlsx")
 
 print(df)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
